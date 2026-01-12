@@ -2,12 +2,10 @@
 
   # MCP Progressive AgentSkill
 
-  ### AgentSkill for MCP - Three-layer progressive disclosure validates AgentSkills.io pattern
+  ### 透過 AgentSkills 標準，以漸進式揭露原則實現高效的 MCP token 使用
 
   [![Node.js Version](https://img.shields.io/badge/node-%3E=18.0.0-brightgreen)](https://nodejs.org)
   [![Python Version](https://img.shields.io/badge/python-3.8+-blue)](https://python.org)
-
-  Daemon-based AgentSkill with three-layer progressive disclosure for efficient MCP token usage
 
   **[English](./README.md)** | **[繁體中文](./README_zhTW.md)**
   
