@@ -141,13 +141,17 @@ Feedback and suggestions welcome.
 - Node.js >= 18.0.0
 - npm
 
-**⚠️ Note**: Python scripts are now archived in `archive/python-legacy/`. The project now uses a unified npm CLI.
-
-### 1. Install and Build
+### 1. Install from npm (Recommended)
 
 ```bash
-npm install
-npm run build
+# Install globally
+npm install -g @cablate/agentic-mcp
+
+# Verify installation
+agentic-mcp --version
+
+# Start daemon
+agentic-mcp daemon start
 ```
 
 ### 2. Configure
@@ -167,23 +171,10 @@ Edit `mcp-servers.json` in the project root:
 }
 ```
 
-**Configuration File Location Priority**:
-1. `MCP_DAEMON_CONFIG` environment variable (if set)
-2. `mcp-servers.json` in project root
-3. `config/mcp-servers.json` (relative to daemon working directory)
-
 ### 3. Start Daemon
 
 ```bash
-node dist/cli/index.js daemon start
-```
-
-Or add to PATH for global usage:
-```bash
-npm link
-
-# Then use from anywhere
-agentic-mcp daemon start
+node dist/cli/index.js daemon start --config <config-path>
 ```
 
 ### 4. Test Connection
@@ -206,96 +197,6 @@ agentic-mcp schema playwright browser_navigate
 
 ```bash
 agentic-mcp call playwright browser_navigate --params '{"url": "https://example.com"}'
-```
-
----
-
-## Multi-Session Support
-
-### Concept
-
-agentic-mcp supports **multiple concurrent sessions** for the same MCP server, inspired by [agent-browser](https://github.com/vercel-labs/agent-browser) design patterns.
-
-**Session Types**:
-- **Global Sessions**: `{server}_global` - Auto-created at daemon startup
-- **Dynamic Sessions**: `{server}_{clientId}` or `{server}_{timestamp}` - Created on-demand
-
-### Why Multiple Sessions?
-
-| Use Case | Description |
-|:---------|:------------|
-| **Multi-Agent Parallel** | Different AI Agents work simultaneously without interference |
-| **Multi-User Isolation** | Separate sessions for different users with their own state |
-| **Environment Separation** | Dev/Test/Prod environments with different configurations |
-| **Resource Optimization** | Shared daemon process, isolated connections |
-
-### Session Management API
-
-#### List All Sessions
-```bash
-agentic-mcp session --list
-
-# Output:
-Active sessions (0):
-  (no active sessions)
-```
-
-#### Create Dynamic Session
-```bash
-# With custom client ID
-agentic-mcp session --create --server serena --client-id agent_a
-
-# Auto-generated session ID (timestamp)
-agentic-mcp session --create --server serena
-```
-
-#### Close Session
-```bash
-agentic-mcp session --close serena_agent_a
-```
-
-#### Switch Session
-```bash
-agentic-mcp session --switch serena_agent_b
-```
-
-### Session Lifecycle
-
-```
-┌─────────────────────────────────────────────┐
-│ Daemon Startup                              │
-│ ├─ Preconnect: serena → serena_global     │
-│ └─ Start cleanup timer (every 5 min)       │
-└─────────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────────┐
-│ Runtime (Dynamic Sessions)                  │
-│ ├─ agentic-mcp session --create → serena_agent1    │
-│ ├─ agentic-mcp session --create → serena_agent2    │
-│ └─ Auto-cleanup after 30 min idle          │
-└─────────────────────────────────────────────┘
-```
-
-### Advanced Usage
-
-**Multi-Agent Scenario**:
-```bash
-# Terminal 1 - Agent A
-agentic-mcp call serena find_file --session-id serena_agent_a --params '{"file_mask": "*.ts"}'
-
-# Terminal 2 - Agent B (different project state)
-agentic-mcp call serena activate_project --session-id serena_agent_b --params '{"project": "MyProject"}'
-```
-
-**Environment Isolation**:
-```bash
-# Development environment
-agentic-mcp session --create --server serena --client-id dev
-agentic-mcp call serena activate_project --session-id serena_dev --params '{"project": "MyProject_Dev"}'
-
-# Test environment
-agentic-mcp session --create --server serena --client-id test
-agentic-mcp call serena activate_project --session-id serena_test --params '{"project": "MyProject_Test"}'
 ```
 
 ---
@@ -369,30 +270,9 @@ Response example:
 +-----------------------------+
 ```
 
-### Session Management
-
-| Session Type | Purpose | Lifecycle |
-|:---|:---|:---|
-| **Global Session** | Pre-connected, shared by all requests | Daemon start → shutdown |
-| **Dynamic Session** | Independent connection, specific use | On-demand → manual close |
-
 ---
 
 ## Configuration
-
-### Environment Variables
-
-| Variable | Default | Description |
-|:---|:---:|:---|
-| `MCP_DAEMON_CONFIG` | - | Path to custom `mcp-servers.json` configuration file |
-
-### Transport Types
-
-| Type | Description | Use Case |
-|:---|:---|:---|
-| `stdio` | Standard input/output | Local MCP server (default) |
-| `http-streamable` | HTTP streaming | Remote MCP server |
-| `sse` | Server-Sent Events | Event-driven MCP server |
 
 ### MCP Servers Configuration
 

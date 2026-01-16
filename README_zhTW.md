@@ -110,17 +110,27 @@
 
 ---
 
-## 快速體驗
+## 快速開始
 
-### 安裝
+### 前置需求
+
+- Node.js >= 18.0.0
+- npm
+
+### 1. 從 npm 安裝（推薦）
 
 ```bash
-npm install
-npm run build
-npm link
+# 全局安裝
+npm install -g @cablate/agentic-mcp
+
+# 驗證安裝
+agentic-mcp --version
+
+# 啟動 daemon
+agentic-mcp daemon start
 ```
 
-### 配置
+### 2. 配置
 
 編輯專案根目錄的 `mcp-servers.json`：
 
@@ -128,41 +138,76 @@ npm link
 {
   "servers": {
     "playwright": {
-      "description": "瀏覽器自動化工具",
+      "description": "Browser automation tool for web navigation, screenshots, clicks, form filling, and more",
+      "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"]
-    },
-    "filesystem": {
-      "description": "檔案系統操作",
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "F:/allowed/path"]
+      "args": ["@playwright/mcp@latest", "--isolated"]
     }
   }
 }
 ```
 
-**配置檔案位置優先順序**：
-1. `agentic-mcp daemon start --config <path>` 參數
-2. `MCP_DAEMON_CONFIG` 環境變數
-3. 執行目錄的 `mcp-servers.json`
-
-### 核心工作流程
+### 3. 啟動 Daemon
 
 ```bash
-# 1. 啟動 daemon
-agentic-mcp daemon start --config <mcp-servers.json path>
+node dist/cli/index.js daemon start --config <config-path>
+```
 
-# 2. Layer 1: 檢查 server 狀態
-agentic-mcp metadata <server>
+### 4. 測試連線
 
-# 3. Layer 2: 列出可用工具
-agentic-mcp list <server>
+```bash
+# 檢查 daemon 狀態
+agentic-mcp daemon health
 
-# 4. Layer 3: 查看特定工具格式
-agentic-mcp schema <server> <tool>
+# Layer 1: 檢查 server 狀態
+agentic-mcp metadata playwright
 
-# 5. 呼叫工具
-agentic-mcp call <server> <tool> --params <args-json-stringify>
+# Layer 2: 列出可用工具
+agentic-mcp list playwright
+
+# Layer 3: 查看特定工具格式
+agentic-mcp schema playwright browser_navigate
+```
+
+### 5. 呼叫工具
+
+```bash
+agentic-mcp call playwright browser_navigate --params '{"url": "https://example.com"}'
+```
+
+---
+
+## 使用範例
+
+### Web 自動化
+
+使用 Playwright MCP server 進行瀏覽器自動化操作：
+
+```bash
+# 1. 導航至網站
+agentic-mcp call playwright browser_navigate --params '{"url": "https://www.apple.com/tw"}'
+
+# 2. 截圖
+agentic-mcp call playwright browser_take_screenshot
+
+# 3. 點擊元素
+agentic-mcp call playwright browser_click --params '{"element": "Mac link", "ref": "e19"}'
+```
+
+### 熱重載配置
+
+修改 `mcp-servers.json` 後重新載入，無需重啟 daemon：
+
+```bash
+agentic-mcp daemon reload
+```
+
+回應範例：
+
+```
+✓ Configuration reloaded
+  Old servers: playwright_global
+  New servers: playwright_global, filesystem_global
 ```
 
 ---
@@ -214,12 +259,6 @@ agentic-mcp call <server> <tool> --params <args-json-stringify>
 **平台支援**：
 - Windows: TCP socket (動態端口)
 - Unix: Domain socket
-
-### Session 管理
-
-| Session 類型 | 用途 | 生命週期 |
-|:---|:---|:---|
-| **Global Session** | 預連接，所有請求共享 | Daemon 啟動 → 關閉 |
 
 ---
 
